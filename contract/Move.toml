@@ -1,16 +1,16 @@
 [package]
-name = "bill_splitter"
+name = "aptme"
 version = "1.0.0"
 authors = []
 
 [addresses]
-bill_splitter = "0x1" # 开发时使用0x1,部署时替换为实际地址
+admin = "0x1" # 开发时使用0x1,部署时替换为实际地址
 
 [dev-addresses]
 
 [dependencies.AptosFramework]
-git = "https://github.com/aptos-labs/aptos-core.git"
+git = "https://github.com/aptos-labs/aptos-framework.git"
 rev = "mainnet"
-subdir = "aptos-move/framework/aptos-framework"
+subdir = "aptos-framework"
 
 [dev-dependencies]

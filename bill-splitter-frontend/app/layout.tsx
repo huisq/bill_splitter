@@ -1,20 +1,47 @@
-import type { Metadata } from 'next'
-import './globals.css'
+// import "@aptos-labs/wallet-adapter-ant-design/dist/index.css";
+import "./globals.css";
+
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { WalletProvider } from "@/components/WalletProvider";
+import { Toaster } from "@/components/ui/toaster";
+import { cn } from "@/lib/utils";
+import type { Metadata } from "next";
+import { Inter as FontSans } from "next/font/google";
+import { PropsWithChildren } from "react";
+import { AutoConnectProvider } from "@/components/AutoConnectProvider";
+import { ReactQueryClientProvider } from "@/components/ReactQueryClientProvider";
+
+const fontSans = FontSans({
+  subsets: ["latin"],
+  variable: "--font-sans",
+});
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.dev',
-}
+  title: "Aptos Wallet Adapter Example",
+  description:
+    "An example of how to use Aptos Wallet Adapter with React and Next.js.",
+};
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export default function RootLayout({ children }: PropsWithChildren) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <body className={cn(fontSans.variable)}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AutoConnectProvider>
+            <ReactQueryClientProvider>
+              <WalletProvider>
+                {children}
+                <Toaster />
+              </WalletProvider>
+            </ReactQueryClientProvider>
+          </AutoConnectProvider>
+        </ThemeProvider>
+      </body>
     </html>
-  )
+  );
 }

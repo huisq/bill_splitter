@@ -1,39 +1,44 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
-import { Wallet, Plus, Bell, Home, FileText, User } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { CreateBillDialog } from "@/components/create-bill-dialog"
-import { ConnectWalletDialog } from "@/components/connect-wallet-dialog"
-import { NotificationsDialog } from "@/components/notifications-dialog"
-import { motion } from "framer-motion"
+import { useState, useEffect } from "react";
+import { Wallet, Plus, Bell, Home, FileText, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CreateBillDialog } from "@/components/create-bill-dialog";
+import { ConnectWalletDialog } from "@/components/connect-wallet-dialog";
+import { NotificationsDialog } from "@/components/notifications-dialog";
+import { motion } from "framer-motion";
+import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import { WalletSelector } from "./WalletSelector";
 
 interface MobileNavbarProps {
-  activeTab: string
-  setActiveTab: (tab: string) => void
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
 }
 
 export function MobileNavbar({ activeTab, setActiveTab }: MobileNavbarProps) {
-  const [isWalletOpen, setIsWalletOpen] = useState(false)
-  const [isCreateOpen, setIsCreateOpen] = useState(false)
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
+  const [isWalletOpen, setIsWalletOpen] = useState(false);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const { account, connected, wallet, changeNetwork } = useWallet();
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 10)
-    }
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
+      setScrolled(window.scrollY > 10);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <>
       <div
         className={`fixed top-0 left-0 right-0 z-50 flex h-14 items-center justify-between px-4 transition-all duration-300 ${
-          scrolled ? "bg-background/90 backdrop-blur-md shadow-sm" : "bg-background"
+          scrolled
+            ? "bg-background/90 backdrop-blur-md shadow-sm"
+            : "bg-background"
         }`}
       >
         <div className="flex items-center">
@@ -47,7 +52,12 @@ export function MobileNavbar({ activeTab, setActiveTab }: MobileNavbarProps) {
           </motion.h1>
         </div>
         <div className="flex items-center space-x-1">
-          <Button variant="ghost" size="icon" onClick={() => setIsNotificationsOpen(true)} className="relative">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsNotificationsOpen(true)}
+            className="relative"
+          >
             <Bell className="h-5 w-5" />
             <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
           </Button>
@@ -61,9 +71,8 @@ export function MobileNavbar({ activeTab, setActiveTab }: MobileNavbarProps) {
               <Plus className="h-5 w-5" />
             </Button>
           </motion.div>
-          <Button variant="ghost" size="icon" onClick={() => setIsWalletOpen(true)}>
-            <Wallet className="h-5 w-5" />
-          </Button>
+
+          <WalletSelector />
         </div>
       </div>
 
@@ -90,16 +99,19 @@ export function MobileNavbar({ activeTab, setActiveTab }: MobileNavbarProps) {
 
       <ConnectWalletDialog open={isWalletOpen} onOpenChange={setIsWalletOpen} />
       <CreateBillDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} />
-      <NotificationsDialog open={isNotificationsOpen} onOpenChange={setIsNotificationsOpen} />
+      <NotificationsDialog
+        open={isNotificationsOpen}
+        onOpenChange={setIsNotificationsOpen}
+      />
     </>
-  )
+  );
 }
 
 interface NavButtonProps {
-  icon: React.ReactNode
-  label: string
-  isActive: boolean
-  onClick: () => void
+  icon: React.ReactNode;
+  label: string;
+  isActive: boolean;
+  onClick: () => void;
 }
 
 function NavButton({ icon, label, isActive, onClick }: NavButtonProps) {
@@ -121,6 +133,5 @@ function NavButton({ icon, label, isActive, onClick }: NavButtonProps) {
         />
       )}
     </motion.button>
-  )
+  );
 }
-

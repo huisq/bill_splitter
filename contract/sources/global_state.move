@@ -5,7 +5,7 @@ module admin::global_state {
     //==============================================================================================
     use std::signer::address_of;
     use aptos_framework::object::{Self, ExtendRef, Object, address_to_object};
-    use aptos_std::table_with_length::{Self as table, TableWithLength};
+    use aptos_std::table_with_length::{TableWithLength};
     use std::vector;
     use aptos_framework::fungible_asset::Metadata;
     use aptos_framework::primary_fungible_store;
@@ -21,7 +21,7 @@ module admin::global_state {
     // Error codes
     //==============================================================================================
     const EPAYEE_NOT_EXISTS: u64 = 0;
-    const USDT: address = 0x357b0b74bc833e95a115ad22604854d6b0fca151cecd94111770e5d6ffc9dc2b;
+    const USDT: address = @0x357b0b74bc833e95a115ad22604854d6b0fca151cecd94111770e5d6ffc9dc2b;
 
     //==============================================================================================
     // Structs
@@ -32,7 +32,7 @@ module admin::global_state {
         bill: vector<Bill>,
     }
 
-    struct Bill has store {
+    struct Bill has store{
         proposer: address,
         payees: TableWithLength<address, u64>,
         created: u64,
@@ -78,14 +78,14 @@ module admin::global_state {
         proposer: address,
         payees: TableWithLength<address, u64>,
     ): u64 acquires GlobalState {
-        let bills = borrow_global_mut<GlobalState>(config_address()).bill;
-        bills.push_back(Bill{
+        let state = borrow_global_mut<GlobalState>(config_address());
+        state.bill.push_back(Bill{
             proposer,
             payees,
             created: timestamp::now_seconds(),
             completed_at: 0
         });
-        bills.length()-1
+        state.bill.length()-1
     }
 
     public(friend) fun pay_bill(
@@ -111,8 +111,8 @@ module admin::global_state {
     // Helper Functions
     //==============================================================================================
     public fun assert_is_payee(bill_uid: u64, payee: address) acquires GlobalState {
-        let bills = borrow_global<GlobalState>(config_address()).bill;
-        assert!(bills.borrow(bill_uid).payees.contains(payee), EPAYEE_NOT_EXISTS);
+        let state = borrow_global<GlobalState>(config_address());
+        assert!(state.bill.borrow(bill_uid).payees.contains(payee), EPAYEE_NOT_EXISTS);
     }
 
     #[test_only]

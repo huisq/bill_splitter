@@ -2,7 +2,7 @@ module admin::aptme {
     use std::bcs;
     use std::vector;
     use std::signer::address_of;
-    use aptos_std::table_with_length::{Self as table, TableWithLength};
+    use aptos_std::table_with_length as table;
     use aptos_framework::object::{Self};
     use admin::global_state::{Self as gs, config_signer, config_address};
 
@@ -10,6 +10,7 @@ module admin::aptme {
     // Error codes
     //==============================================================================================
     const EPROFILE_ALREADY_EXISTS: u64 = 0;
+    const EINVALID_PAYEE_INFO: u64 = 1;
 
     //==============================================================================================
     // Structs
@@ -23,18 +24,24 @@ module admin::aptme {
 
     public entry fun create_bill(
         user: &signer,
-        payees: TableWithLength<address, u64>,
+        payee_address: vector<address>,
+        payee_amount: vector<u64>,
     ) acquires Profile {
         if(!profile_exist_check(address_of(user))){
             create_profile(address_of(user))
         };
-
+        assert!(payee_address.length() == payee_amount.length(), EINVALID_PAYEE_INFO);
+        let payees = table::new<address, u64>();
+        for(i in 0..payee_address.length()){
+            payees.add(payee_address[i], payee_amount[i]);
+            i += 1
+        };
         let bill_no = gs::create_bill(address_of(user), payees);
         let proposer = user_profile_mut(address_of(user));
         proposer.bill_proposed.push_back(bill_no);
 
-        for(i in 0..payees.length()){
-            let payee = *vector::borrow(&payees, i);
+        for(i in 0..payee_address.length()){
+            let payee = payee_address[i];
             if(!profile_exist_check(payee)){
                 create_profile(payee);
             };

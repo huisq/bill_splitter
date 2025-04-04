@@ -4,9 +4,10 @@ module admin::global_state {
     // Dependencies
     //==============================================================================================
     use std::signer::address_of;
+    use std::string::String;
     use aptos_framework::object::{Self, ExtendRef, Object, address_to_object};
-    use aptos_std::table_with_length::{TableWithLength};
     use std::vector;
+    use aptos_std::string_utils;
     use aptos_framework::fungible_asset::Metadata;
     use aptos_framework::primary_fungible_store;
     use aptos_framework::timestamp;
@@ -32,9 +33,10 @@ module admin::global_state {
         bill: vector<Bill>,
     }
 
-    struct Bill has store{
+    struct Bill has store, copy, drop{
         proposer: address,
-        payees: TableWithLength<address, u64>,
+        payees: vector<address>,
+        amount: u64,
         created: u64,
         completed_at: u64, //0 if not completed
     }
@@ -76,12 +78,14 @@ module admin::global_state {
 
     public(friend) fun create_bill(
         proposer: address,
-        payees: TableWithLength<address, u64>,
+        payees: vector<address>,
+        amount: u64
     ): u64 acquires GlobalState {
         let state = borrow_global_mut<GlobalState>(config_address());
         state.bill.push_back(Bill{
             proposer,
             payees,
+            amount,
             created: timestamp::now_seconds(),
             completed_at: 0
         });
@@ -91,20 +95,43 @@ module admin::global_state {
     public(friend) fun pay_bill(
         payee: &signer,
         uid: u64,
-        amount: u64
     ) acquires GlobalState {
         assert_is_payee(uid, address_of(payee));
         let bill = borrow_global_mut<GlobalState>(config_address()).bill.borrow_mut(uid);
-        if(amount >= *bill.payees.borrow(address_of(payee))){
-            amount = *bill.payees.borrow(address_of(payee));
-            bill.payees.remove(address_of(payee));
+        if(bill.payees.contains(&address_of(payee))){
+            let (_, i) = bill.payees.index_of(&address_of(payee));
+            bill.payees.remove(i);
         }else{
-            *bill.payees.borrow_mut(address_of(payee)) -= amount;
+            abort EPAYEE_NOT_EXISTS
         };
-        primary_fungible_store::transfer(payee, address_to_object<Metadata>(USDT), bill.proposer, amount);
+        primary_fungible_store::transfer(payee, address_to_object<Metadata>(USDT), bill.proposer, bill.amount);
         if(bill.payees.length() == 0){
             bill.completed_at = timestamp::now_seconds();
         };
+    }
+
+    //==============================================================================================
+    // View Functions
+    //==============================================================================================
+    #[view]
+    public fun view_all_bills(): vector<vector<String>> acquires GlobalState {
+        let bill = borrow_global<GlobalState>(config_address()).bill;
+        let output = vector::empty();
+        for(i in 0..bill.length()){
+            let entry = vector::empty<String>();
+            entry.push_back(string_utils::to_string(&bill[i].proposer));
+            let payees = bill[i].payees;
+            let payee_string = string_utils::to_string(&payees[i]);
+            for(j in 1..payees.length()){
+                payee_string = string_utils::format2(&b"{},{}", payee_string, payees[i]);
+            };
+            entry.push_back(payee_string);
+            entry.push_back(string_utils::to_string(&bill[i].amount));
+            entry.push_back(string_utils::to_string(&bill[i].created));
+            entry.push_back(string_utils::to_string(&bill[i].completed_at));
+            output.push_back(entry);
+        };
+        output
     }
 
     //==============================================================================================
@@ -112,7 +139,7 @@ module admin::global_state {
     //==============================================================================================
     public fun assert_is_payee(bill_uid: u64, payee: address) acquires GlobalState {
         let state = borrow_global<GlobalState>(config_address());
-        assert!(state.bill.borrow(bill_uid).payees.contains(payee), EPAYEE_NOT_EXISTS);
+        assert!(state.bill.borrow(bill_uid).payees.contains(&payee), EPAYEE_NOT_EXISTS);
     }
 
     #[test_only]

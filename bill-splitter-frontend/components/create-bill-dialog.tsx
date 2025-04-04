@@ -155,11 +155,11 @@ export function CreateBillDialog({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [totalAmount, setTotalAmount] = useState("");
-  const [token, setToken] = useState("USDC");
+  const [token, setToken] = useState("APT");
   const [deadline, setDeadline] = useState("");
-  const [acceptedTokens, setAcceptedTokens] = useState(["USDC"]);
+  const [acceptedTokens, setAcceptedTokens] = useState(["APT"]);
 
-  const tokens = ["USDC", "USDT", "APT"];
+  const tokens = ["APT", "USDC", "USDT"];
 
   // Reset state when dialog opens/closes
   useEffect(() => {

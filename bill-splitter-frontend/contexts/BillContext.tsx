@@ -16,6 +16,7 @@ interface Bill {
 
 interface BillContextType {
   bills: Bill[];
+  allBills: Bill[];
   loading: boolean;
   error: any;
   refreshBills: () => Promise<void>;
@@ -26,6 +27,7 @@ const BillContext = createContext<BillContextType | undefined>(undefined);
 
 export function BillProvider({ children }: { children: React.ReactNode }) {
   const [bills, setBills] = useState<Bill[]>([]);
+  const [allBills, setAllBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<any>(null);
   const { account } = useWallet();
@@ -37,23 +39,24 @@ export function BillProvider({ children }: { children: React.ReactNode }) {
 
       if (!account?.address) {
         setBills([]);
+        setAllBills([]);
         return;
       }
 
-      const allBills = await getAllUserBill();
+      const response = await getAllUserBill();
 
-      // 过滤出当前用户创建的账单
-      const userBills = allBills[0].filter(
-        (bill: any[]) =>
-          bill[0].replace("@", "") === account.address?.toString()
-      );
-
-      // 格式化账单数据
-      const formattedBills = userBills.map((bill: any[]) => {
+      // 格式化所有账单数据
+      const formattedAllBills = response[0].map((bill: any[]) => {
         const payeeAddresses = bill[1]
           .split(";")
           .slice(1)
-          .map((addr: string) => addr.replace(/\\/g, "").replace(/@/g, ""));
+          .map((addr: string) =>
+            addr
+              .replace(/\\/g, "")
+              .replace(/@/g, "")
+              .replace(/"/g, "")
+              .replace(/'/g, "")
+          );
 
         const perPersonAmount = Number(bill[2]);
         const totalAmount = perPersonAmount * payeeAddresses.length;
@@ -67,8 +70,15 @@ export function BillProvider({ children }: { children: React.ReactNode }) {
           status: bill[4],
         };
       });
-      console.log("formattedBills", formattedBills);
-      setBills(formattedBills);
+
+      setAllBills(formattedAllBills);
+
+      // 过滤出当前用户创建的账单
+      const userBills = formattedAllBills.filter(
+        (bill: any) => bill.id === account.address?.toString()
+      );
+
+      setBills(userBills);
     } catch (error) {
       console.error("Error fetching bills:", error);
       setError(error);
@@ -83,7 +93,7 @@ export function BillProvider({ children }: { children: React.ReactNode }) {
   };
 
   const getBillById = (timestamp: string) => {
-    return bills.find((bill) => bill.timestamp.toString() === timestamp);
+    return allBills.find((bill) => bill.timestamp.toString() === timestamp);
   };
 
   useEffect(() => {
@@ -94,7 +104,7 @@ export function BillProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <BillContext.Provider
-      value={{ bills, loading, error, refreshBills, getBillById }}
+      value={{ bills, allBills, loading, error, refreshBills, getBillById }}
     >
       {children}
     </BillContext.Provider>

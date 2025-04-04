@@ -111,8 +111,7 @@ export default function Dashboard() {
                         Bill #{bill.id.slice(0, 8)}...
                       </h3>
                       <p className="text-xs text-muted-foreground">
-                        Created at{" "}
-                        {new Date(bill.timestamp).toLocaleDateString()}
+                        Created at {new Date(bill.timestamp).toLocaleString()}
                       </p>
                     </div>
                     <Badge

@@ -48,7 +48,7 @@ export function MobileNavbar({ activeTab, setActiveTab }: MobileNavbarProps) {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
           >
-            Aptos Bill Splitter
+            AptMe
           </motion.h1>
         </div>
         <div className="flex items-center space-x-1">

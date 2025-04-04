@@ -1,4 +1,4 @@
-# Aptos Bill Splitter - Decentralized Bill Splitting System
+# AptMe - Decentralized Bill Splitting System
 
 ## System Architecture Overview
 
@@ -9,13 +9,13 @@ graph TD
     A[MobileNavbar] --> B[Dashboard]
     A --> C[Requests]
     A --> D[Profile]
-    
+
     B --> E[BillDetailsDialog]
     B --> F[CreateBillDialog]
-    
+
     C --> G[Received Requests]
     C --> H[Sent Requests]
-    
+
     E --> I[PaymentDialog]
     F --> J[Participant Management]
     F --> K[Token Selection]
@@ -29,13 +29,13 @@ graph TD
     A --> C[Pay Bill]
     A --> D[Query Bill]
     A --> E[Close Bill]
-    
+
     B --> F[types/Bill Structure]
     B --> G[events/BillCreated]
-    
+
     C --> H[token_manager/Transfer]
     C --> I[events/Payment]
-    
+
     D --> J[Query User Bills]
     D --> K[Query Bill Details]
 ```
@@ -48,7 +48,7 @@ sequenceDiagram
     participant UI as Frontend Interface
     participant C as Smart Contract
     participant BC as Blockchain
-    
+
     rect rgb(200, 220, 240)
     note right of U: Bill Creation Flow
     U->>UI: Click Create Bill
@@ -61,7 +61,7 @@ sequenceDiagram
     C->>UI: Return Bill ID
     UI->>U: Show Creation Success
     end
-    
+
     rect rgb(220, 240, 200)
     note right of U: Bill Payment Flow
     U->>UI: View Pending Bills
@@ -75,7 +75,7 @@ sequenceDiagram
     C->>UI: Return Payment Result
     UI->>U: Show Payment Success
     end
-    
+
     rect rgb(240, 220, 200)
     note right of U: Bill Query Flow
     U->>UI: Open Dashboard
@@ -121,29 +121,29 @@ struct Participant has store, drop, copy {
 
 ```typescript
 interface Bill {
-    id: string;
-    title: string;
-    description: string;
-    amount: number;
-    token: string;
-    creator: {
-        address: string;
-        name: string;
-    };
-    participants: Participant[];
-    deadline: string;
-    progress: number;
-    status: 'pending' | 'completed';
-    color: string;
-    acceptedTokens: string[];
+  id: string;
+  title: string;
+  description: string;
+  amount: number;
+  token: string;
+  creator: {
+    address: string;
+    name: string;
+  };
+  participants: Participant[];
+  deadline: string;
+  progress: number;
+  status: "pending" | "completed";
+  color: string;
+  acceptedTokens: string[];
 }
 
 interface Participant {
-    address: string;
-    name?: string;
-    amount: number;
-    paid: boolean;
-    type: 'wallet' | 'email';
+  address: string;
+  name?: string;
+  amount: number;
+  paid: boolean;
+  type: "wallet" | "email";
 }
 ```
 
@@ -152,6 +152,7 @@ interface Participant {
 ### 1. Bill Creation Module (CreateBillDialog)
 
 - **UI Component Responsibilities**:
+
   - Multi-step form process
   - Participant management (wallet/email)
   - Token selection and amount setting
@@ -160,14 +161,23 @@ interface Participant {
 - **Contract Interaction**:
   ```typescript
   async function createBill(params: CreateBillParams): Promise<string> {
-    const { title, description, amount, token, participants, deadline } = params;
-    return contract.create_bill(title, description, amount, token, participants, deadline);
+    const { title, description, amount, token, participants, deadline } =
+      params;
+    return contract.create_bill(
+      title,
+      description,
+      amount,
+      token,
+      participants,
+      deadline
+    );
   }
   ```
 
 ### 2. Payment Module (PaymentDialog)
 
 - **UI Component Responsibilities**:
+
   - Display bill details
   - Token selection and balance display
   - Token exchange integration
@@ -175,7 +185,11 @@ interface Participant {
 
 - **Contract Interaction**:
   ```typescript
-  async function payBill(billId: string, amount: number, token: string): Promise<boolean> {
+  async function payBill(
+    billId: string,
+    amount: number,
+    token: string
+  ): Promise<boolean> {
     return contract.pay_bill(billId, amount, token);
   }
   ```
@@ -183,6 +197,7 @@ interface Participant {
 ### 3. Bill Management Module (Dashboard/Requests)
 
 - **UI Component Responsibilities**:
+
   - Bill list display
   - Status filtering and search
   - Payment status tracking
@@ -225,6 +240,7 @@ stateDiagram-v2
 ## Security Considerations
 
 1. **Contract Security**
+
    - Access control
    - Amount validation
    - Reentrancy protection
@@ -239,11 +255,13 @@ stateDiagram-v2
 ## Optimization Suggestions
 
 1. **Performance Optimization**
+
    - Batch queries
    - Caching strategy
    - Lazy loading
 
 2. **User Experience**
+
    - Offline support
    - State synchronization
    - Error recovery
@@ -256,11 +274,13 @@ stateDiagram-v2
 ## Future Plans
 
 1. **Feature Extensions**
+
    - Recurring bills
    - Group management
    - Payment reminders
 
 2. **Integration Enhancements**
+
    - More DEX support
    - Multi-chain assets
    - Social features

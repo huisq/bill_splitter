@@ -1,66 +1,66 @@
-"use client"
+"use client";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Progress } from "@/components/ui/progress"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { QrCode, Calendar, User, Share2 } from "lucide-react"
-import { PaymentDialog } from "@/components/payment-dialog"
-import { useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Calendar, User } from "lucide-react";
+import { PaymentDialog } from "@/components/payment-dialog";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useBills } from "@/contexts/BillContext";
+import { useWallet } from "@aptos-labs/wallet-adapter-react";
 
 interface BillDetailsDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  billId: string
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  billTimestamp: string;
 }
 
-export function BillDetailsDialog({ open, onOpenChange, billId }: BillDetailsDialogProps) {
-  const [isPaymentOpen, setIsPaymentOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState("participants")
+export function BillDetailsDialog({
+  open,
+  onOpenChange,
+  billTimestamp,
+}: BillDetailsDialogProps) {
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("participants");
+  const { getBillById } = useBills();
+  const { account } = useWallet();
 
-  // Mock data - in a real app, you would fetch this based on billId
-  const bill = {
-    id: billId,
-    title: "Dinner at Satoshi's",
-    description: "Group dinner at the new crypto-themed restaurant",
-    amount: 120,
-    token: "USDC",
-    creator: "0x1a2b...3c4d",
-    creatorName: "Alex",
-    participants: [
-      { address: "0x5e6f...7g8h", name: "Sam", amount: 30, paid: true },
-      { address: "jamie@gmail.com", name: "Jamie", amount: 30, paid: true },
-      { address: "0x2k3l...4m5n", name: "Taylor", amount: 30, paid: false },
-      { address: "0x6o7p...8q9r", name: "You", amount: 30, paid: false },
-    ],
-    deadline: "2025-04-01",
-    progress: 50,
-    status: "pending",
-    acceptedTokens: ["USDC", "USDT", "APT"],
-    color: "from-blue-500 to-cyan-400",
+  const bill = getBillById(billTimestamp);
+
+  if (!bill) {
+    return null;
   }
 
-  const isCreator = bill.participants.find((p) => p.name === "You") === undefined
-  const userParticipant = bill.participants.find((p) => p.name === "You")
+  const currentUserIsPayee = bill.payees.includes(
+    account?.address?.toString() || ""
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] p-0 gap-0 overflow-hidden">
-        <div className={`h-24 bg-gradient-to-r ${bill.color} p-4 flex flex-col justify-end`}>
+        <div className="h-24 bg-gradient-to-r from-primary to-purple-500 p-4 flex flex-col justify-end">
           <DialogHeader className="text-white">
             <DialogTitle className="flex items-center justify-between">
-              <span className="text-xl">{bill.title}</span>
+              <span className="text-xl">Bill Details</span>
               <Badge
-                variant={bill.status === "completed" ? "outline" : "default"}
+                variant={bill.status === "1" ? "outline" : "default"}
                 className="bg-white/20 text-white border-white/40"
               >
-                {bill.status === "completed" ? "Completed" : "Pending"}
+                {bill.status === "1" ? "Completed" : "Pending"}
               </Badge>
             </DialogTitle>
-            <p className="text-white/80 text-sm mt-1">{bill.description}</p>
+            <p className="text-white/80 text-sm mt-1">
+              Created at {new Date(bill.timestamp).toLocaleString()}
+            </p>
           </DialogHeader>
         </div>
 
@@ -69,41 +69,32 @@ export function BillDetailsDialog({ open, onOpenChange, billId }: BillDetailsDia
             <div className="flex items-center">
               <Avatar className="h-10 w-10 mr-3 border-2 border-background">
                 <AvatarFallback className="bg-gradient-to-br from-primary to-purple-500 text-white">
-                  {bill.creatorName[0]}
+                  {bill.id.slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <p className="text-sm font-medium">{bill.creatorName}</p>
+                <p className="text-sm font-medium">
+                  Bill #{bill.id.slice(0, 8)}...
+                </p>
                 <p className="text-xs text-muted-foreground">Creator</p>
               </div>
             </div>
             <div className="text-right">
-              <p className="font-medium">
-                {bill.amount} {bill.token}
-              </p>
+              <p className="font-medium">{bill.amount} APT</p>
               <div className="flex items-center text-xs text-muted-foreground">
                 <Calendar className="h-3 w-3 mr-1" />
-                {new Date(bill.deadline).toLocaleDateString()}
+                {new Date(bill.timestamp).toLocaleDateString()}
               </div>
             </div>
           </div>
 
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <p className="text-xs text-muted-foreground">
-                {bill.participants.filter((p) => p.paid).length} of {bill.participants.length} paid
-              </p>
-              <p className="text-xs font-medium">{bill.progress}% Complete</p>
-            </div>
-            <Progress
-              value={bill.progress}
-              className="h-1.5 rounded-full"
-              indicatorClassName={`bg-gradient-to-r ${bill.color}`}
-            />
-          </div>
-
-          <Tabs defaultValue="participants" value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 p-1 bg-muted/50 rounded-xl">
+          <Tabs
+            defaultValue="participants"
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
+            <TabsList className="grid w-full grid-cols-1 p-1 bg-muted/50 rounded-xl">
               <TabsTrigger
                 value="participants"
                 className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
@@ -111,108 +102,45 @@ export function BillDetailsDialog({ open, onOpenChange, billId }: BillDetailsDia
                 <User className="h-4 w-4 mr-1.5" />
                 Participants
               </TabsTrigger>
-              <TabsTrigger
-                value="details"
-                className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
-              >
-                <Share2 className="h-4 w-4 mr-1.5" />
-                Payment Details
-              </TabsTrigger>
             </TabsList>
 
             <AnimatePresence mode="wait">
-              {activeTab === "participants" && (
-                <TabsContent value="participants" className="mt-3 space-y-2">
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    {bill.participants.map((participant, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="flex items-center">
-                          <Avatar className="h-8 w-8 mr-3">
-                            <AvatarFallback
-                              className={`text-white ${
-                                participant.paid
-                                  ? "bg-gradient-to-br from-green-400 to-emerald-400"
-                                  : "bg-gradient-to-br from-amber-400 to-orange-400"
-                              }`}
-                            >
-                              {participant.name[0]}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium text-sm">{participant.name}</p>
-                            {participant.address.includes("@") ? (
-                              <p className="text-xs text-muted-foreground flex items-center">
-                                <span className="text-xs bg-blue-100 text-blue-600 px-1 rounded mr-1">@</span>
-                                {participant.address}
-                              </p>
-                            ) : (
-                              <p className="text-xs text-muted-foreground flex items-center">
-                                <span className="text-xs bg-purple-100 text-purple-600 px-1 rounded mr-1">Ξ</span>
-                                {participant.address.slice(0, 6)}...{participant.address.slice(-4)}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-medium text-sm">
-                            {participant.amount} {bill.token}
+              <TabsContent value="participants" className="mt-3 space-y-2">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {bill.payees.map((payee, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex items-center">
+                        <Avatar className="h-8 w-8 mr-3">
+                          <AvatarFallback className="text-white bg-gradient-to-br from-amber-400 to-orange-400">
+                            {payee.slice(0, 2)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="text-xs text-muted-foreground flex items-center">
+                            <span className="text-xs bg-purple-100 text-purple-600 px-1 rounded mr-1">
+                              Ξ
+                            </span>
+                            {payee.slice(0, 6)}...{payee.slice(-4)}
                           </p>
-                          <Badge variant={participant.paid ? "outline" : "secondary"} className="text-xs">
-                            {participant.paid ? "Paid" : "Pending"}
-                          </Badge>
                         </div>
                       </div>
-                    ))}
-                  </motion.div>
-                </TabsContent>
-              )}
-
-              {activeTab === "details" && (
-                <TabsContent value="details" className="mt-3 space-y-3">
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <div>
-                      <p className="text-sm font-medium">Accepted Tokens</p>
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        {bill.acceptedTokens.map((token) => (
-                          <Badge key={token} variant="outline" className="bg-muted/50">
-                            {token}
-                          </Badge>
-                        ))}
+                      <div className="text-right">
+                        <p className="font-medium text-sm">
+                          {bill.perPersonAmount} APT
+                        </p>
                       </div>
                     </div>
-
-                    <div className="mt-4">
-                      <p className="text-sm font-medium">Payment QR Code</p>
-                      <div className="flex justify-center mt-2 border rounded-md p-4 bg-white">
-                        <div className="flex flex-col items-center">
-                          <div className="relative">
-                            <QrCode className="h-32 w-32" />
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="h-8 w-8 rounded-full bg-white p-1">
-                                <div className="h-full w-full rounded-full bg-gradient-to-r from-primary to-purple-500"></div>
-                              </div>
-                            </div>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-2">Scan to pay with any Aptos wallet</p>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                </TabsContent>
-              )}
+                  ))}
+                </motion.div>
+              </TabsContent>
             </AnimatePresence>
           </Tabs>
 
@@ -221,7 +149,7 @@ export function BillDetailsDialog({ open, onOpenChange, billId }: BillDetailsDia
               Close
             </Button>
 
-            {!isCreator && userParticipant && !userParticipant.paid && (
+            {currentUserIsPayee && bill.status === "0" && (
               <Button
                 onClick={() => setIsPaymentOpen(true)}
                 className="bg-gradient-to-r from-primary to-purple-500 hover:from-primary/90 hover:to-purple-500/90"
@@ -233,15 +161,14 @@ export function BillDetailsDialog({ open, onOpenChange, billId }: BillDetailsDia
         </div>
       </DialogContent>
 
-      {userParticipant && (
+      {currentUserIsPayee && (
         <PaymentDialog
           open={isPaymentOpen}
           onOpenChange={setIsPaymentOpen}
           bill={bill}
-          amount={userParticipant.amount}
+          amount={bill.perPersonAmount}
         />
       )}
     </Dialog>
-  )
+  );
 }
-

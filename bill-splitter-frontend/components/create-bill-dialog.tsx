@@ -50,6 +50,8 @@ import {
   useWallet,
   InputTransactionData,
 } from "@aptos-labs/wallet-adapter-react";
+import { toast } from "react-toastify";
+import { useBills } from "@/contexts/BillContext";
 
 interface CreateBillDialogProps {
   open: boolean;
@@ -141,6 +143,7 @@ export function CreateBillDialog({
   onOpenChange,
 }: CreateBillDialogProps) {
   const { signAndSubmitTransaction } = useWallet();
+  const { refreshBills } = useBills();
   const [payees, setPayees] = useState<Payee[]>([
     { id: "1", address: "", amount: "" },
   ]);
@@ -412,7 +415,7 @@ export function CreateBillDialog({
       const payload: InputTransactionData = {
         data: {
           function: `${process.env.NEXT_PUBLIC_CONTRACT_ADDRESS}::aptme::create_bill`,
-          functionArguments: [payeeAddresses, payeeAmounts],
+          functionArguments: [payeeAddresses, payeeAmounts[0]],
         },
       };
 
@@ -421,31 +424,17 @@ export function CreateBillDialog({
         transactionHash: response.hash,
       });
 
-      // 保存到 localStorage
-      const billData = {
-        id: Date.now(),
-        title,
-        description,
-        totalAmount,
-        token,
-        deadline,
-        acceptedTokens,
-        splitType,
-        payees: validPayees,
-        transactionHash: response.hash,
-        createdAt: new Date().toISOString(),
-      };
+      console.log("res", res);
+      toast.success("Bill created successfully");
 
-      // 获取现有账单列表
-      const existingBills = JSON.parse(localStorage.getItem("bills") || "[]");
-      existingBills.push(billData);
-      localStorage.setItem("bills", JSON.stringify(existingBills));
+      // 刷新账单列表
+      await refreshBills();
 
+      // 关闭弹窗
       onOpenChange(false);
-      // 可以添加成功提示
     } catch (error) {
       console.error("Failed to create bill:", error);
-      // 可以添加错误提示
+      toast.error("Failed to create bill");
     }
   };
 

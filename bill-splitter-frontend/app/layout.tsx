@@ -3,13 +3,14 @@ import "./globals.css";
 
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { WalletProvider } from "@/components/WalletProvider";
-import { Toaster } from "@/components/ui/toaster";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import { Inter as FontSans } from "next/font/google";
 import { PropsWithChildren } from "react";
 import { AutoConnectProvider } from "@/components/AutoConnectProvider";
 import { ReactQueryClientProvider } from "@/components/ReactQueryClientProvider";
+import { ToastContainer } from "react-toastify";
+import { BillProvider } from "@/contexts/BillContext";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -17,9 +18,8 @@ const fontSans = FontSans({
 });
 
 export const metadata: Metadata = {
-  title: "Aptos Wallet Adapter Example",
-  description:
-    "An example of how to use Aptos Wallet Adapter with React and Next.js.",
+  title: "AptMe",
+  description: "AptMe",
 };
 
 export default function RootLayout({ children }: PropsWithChildren) {
@@ -35,8 +35,10 @@ export default function RootLayout({ children }: PropsWithChildren) {
           <AutoConnectProvider>
             <ReactQueryClientProvider>
               <WalletProvider>
-                {children}
-                <Toaster />
+                <BillProvider>
+                  <ToastContainer aria-label="toast-container" />
+                  {children}
+                </BillProvider>
               </WalletProvider>
             </ReactQueryClientProvider>
           </AutoConnectProvider>

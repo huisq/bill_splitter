@@ -131,10 +131,10 @@ export default function Dashboard() {
                     </div>
                     <div className="flex flex-col items-end">
                       <div className="font-medium text-sm">
-                        {bill.amount} APT
+                        {bill.amount / 1e6} USDT
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        ({bill.perPersonAmount} APT per person)
+                        ({bill.perPersonAmount / 1e6} USDT per person)
                       </div>
                     </div>
                   </div>

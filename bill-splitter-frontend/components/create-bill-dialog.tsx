@@ -133,7 +133,7 @@ interface Payee {
 interface BillLocalStorage {
   title: string;
   description: string;
-  deadline: string;
+  // deadline: string;
   token: string;
   acceptedTokens: string[];
 }
@@ -155,11 +155,11 @@ export function CreateBillDialog({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [totalAmount, setTotalAmount] = useState("");
-  const [token, setToken] = useState("APT");
-  const [deadline, setDeadline] = useState("");
-  const [acceptedTokens, setAcceptedTokens] = useState(["APT"]);
+  const [token, setToken] = useState("USDT");
+  // const [deadline, setDeadline] = useState("");
+  const [acceptedTokens, setAcceptedTokens] = useState(["USDT"]);
 
-  const tokens = ["APT", "USDC", "USDT"];
+  const tokens = ["USDT", "APT", "USDC"];
 
   // Reset state when dialog opens/closes
   useEffect(() => {
@@ -352,7 +352,7 @@ export function CreateBillDialog({
     const billData: BillLocalStorage = {
       title,
       description,
-      deadline,
+      // deadline,
       token,
       acceptedTokens,
     };
@@ -415,7 +415,7 @@ export function CreateBillDialog({
       const payload: InputTransactionData = {
         data: {
           function: `${process.env.NEXT_PUBLIC_CONTRACT_ADDRESS}::aptme::create_bill`,
-          functionArguments: [payeeAddresses, payeeAmounts[0]],
+          functionArguments: [payeeAddresses, payeeAmounts[0] * 1e6],
         },
       };
 
@@ -645,7 +645,7 @@ export function CreateBillDialog({
                     </div>
                   </div> */}
 
-                  <div className="space-y-1">
+                  {/* <div className="space-y-1">
                     <Label htmlFor="deadline" className="text-xs font-medium">
                       Deadline
                     </Label>
@@ -659,7 +659,7 @@ export function CreateBillDialog({
                       />
                       <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               </motion.div>
             )}
@@ -1070,14 +1070,14 @@ export function CreateBillDialog({
                         {splitType === "equal" ? "Equal" : "Custom"}
                       </span>
                     </div>
-                    <div className="flex justify-between">
+                    {/* <div className="flex justify-between">
                       <span className="text-xs text-muted-foreground">
                         Deadline
                       </span>
                       <span className="text-xs font-medium">
                         {deadline || "No deadline"}
                       </span>
-                    </div>
+                    </div> */}
                     <div className="flex justify-between">
                       <span className="text-xs text-muted-foreground">
                         Participants

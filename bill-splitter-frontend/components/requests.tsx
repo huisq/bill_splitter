@@ -121,7 +121,7 @@ export default function Requests() {
                         <CardContent className="p-3 pt-2">
                           <div className="flex items-center justify-between">
                             <div className="font-medium text-sm">
-                              You owe: {request.perPersonAmount} APT
+                              You owe: {request.perPersonAmount / 1e6} USDT
                             </div>
                             {request.status === "0" && (
                               <Button
@@ -194,7 +194,7 @@ export default function Requests() {
                               {new Date(request.timestamp).toLocaleString()}
                             </div>
                             <div className="font-medium text-sm">
-                              {request.amount} APT
+                              {request.amount / 1e6} USDT
                             </div>
                           </div>
                         </CardContent>

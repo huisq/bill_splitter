@@ -21,6 +21,7 @@ import {
   getAllUserBill,
   getUserBillReceived,
 } from "@/view-functions/getUserBill";
+import { useBills } from "@/contexts/BillContext";
 
 interface PaymentDialogProps {
   open: boolean;
@@ -38,6 +39,7 @@ export function PaymentDialog({
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStep, setProcessingStep] = useState(0);
   const { account, signAndSubmitTransaction } = useWallet();
+  const { refreshBills } = useBills();
 
   const processingSteps = [
     "Connecting to wallet...",
@@ -84,6 +86,9 @@ export function PaymentDialog({
         transactionHash: response.hash,
       });
 
+      // 刷新账单数据
+      await refreshBills();
+
       toast.success("Payment successful");
       onOpenChange(false);
     } catch (error) {
@@ -112,13 +117,13 @@ export function PaymentDialog({
               <div className="flex items-center justify-between mt-2">
                 <div>
                   <p className="text-xs text-muted-foreground">Amount Due</p>
-                  <p className="font-medium">{amount} APT</p>
+                  <p className="font-medium">{amount / 1e6} USDT</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">Created At</p>
                   <p className="font-medium">
                     {bill?.timestamp
-                      ? new Date(bill.timestamp).toLocaleDateString()
+                      ? new Date(bill.timestamp).toLocaleString()
                       : "Loading..."}
                   </p>
                 </div>
